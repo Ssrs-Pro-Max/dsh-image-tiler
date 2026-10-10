@@ -1,0 +1,39 @@
+# Loader patch for the dsh-image-tiler bundle.
+#
+# This plugin replaces the deployment's attachment store, so the official row
+# has to step aside before the replacement mounts: a Cordis service name can be
+# provided only once, and the second provider would fail to load — and a plugin
+# that cannot load stops the whole harness.
+#
+# `disabled` is id-targeted, so the official row keeps whatever it was given by
+# earlier patch layers; only the profile's own overrides for that id are
+# dropped, which is why a deployment that accepts images larger than the
+# defaults has to restate its ceilings here:
+#
+#   config:
+#     maxImageDimension: 65536
+#     maxImagePixels: 1500000000
+#
+# Tiling works either way — the planner reads whatever ceilings the store was
+# configured with — but a source larger than them cannot be uploaded at all.
+#
+# `dshHome` is deliberately not set. Left undefined, the store resolves the
+# harness home exactly as the official row does: the explicit value if one is
+# configured, then `$DSH_HOME`, then `~/.dsh`. An explicit value here would
+# outrank `$DSH_HOME` and could write attachments outside the home the profile
+# actually runs under.
+#
+# `normalizedImageMaxPixels` is left alone too: it caps one published image,
+# and a tile the store downscales after the crop would undo the tiling between
+# the crop and the model.
+#
+# The plugin has no settings of its own; the only `config:` block it reads is
+# the one above, and the numbers that matter for tiling are the store's
+# `maxImagesPerMessage` (the piece budget, 20 by default) and
+# `normalizedImageMaxPixels` (the ceiling one piece has to stay under).
+- id: attachment-local
+  disabled: true
+
+- insert:
+    - id: image-tiler
+      name: dsh-image-tiler

@@ -1,0 +1,62 @@
+{
+  "name": "dsh-image-tiler",
+  "version": "0.1.6",
+  "description": "Shows oversized images to the model at a readably high resolution by tiling them before admission.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./geometry": "./lib/geometry.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "lib/geometry.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "icon": "./icon.svg",
+  "engines": {
+    "dsh": ">=0.2.0-rc.1 <0.3.0",
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ssrs-Pro-Max/dsh-image-tiler.git"
+  },
+  "homepage": "https://github.com/Ssrs-Pro-Max/dsh-image-tiler#readme",
+  "bugs": {
+    "url": "https://github.com/Ssrs-Pro-Max/dsh-image-tiler/issues"
+  },
+  "author": "Ssrs-Pro-Max",
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "image",
+    "tiling",
+    "vision",
+    "ocr",
+    "screenshot"
+  ],
+  "scripts": {
+    "test": "node test/geometry.test.mjs && node test/admission.test.mjs"
+  },
+  "dependencies": {
+    "sharp": "^0.35.3"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-attachment": ">=0.2.0-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-attachment-local": ">=0.2.0-rc.1 <0.3.0-0",
+    "@deepseek-ai/cordis": "~4.0.4"
+  }
+}

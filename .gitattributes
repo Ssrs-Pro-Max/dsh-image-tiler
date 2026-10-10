@@ -1,0 +1,10 @@
+# The published tarball and the repository must stay byte-identical: a consumer
+# comparing an installed copy against this repo should find no difference, and a
+# Windows checkout that rewrites LF must not be it. Every file here is LF, so
+# `eol=lf` makes checkout reproduce exactly what the tarball ships.
+* text=auto eol=lf
+
+# Binary by nature; never normalise or diff them.
+*.png binary
+*.jpg binary
+*.tgz binary
