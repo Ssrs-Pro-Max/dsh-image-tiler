@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-[![version](https://img.shields.io/badge/version-0.1.6-4176E6)](https://github.com/Ssrs-Pro-Max/dsh-image-tiler)
+[![version](https://img.shields.io/badge/version-0.1.7-4176E6)](https://github.com/Ssrs-Pro-Max/dsh-image-tiler)
 [![npm](https://img.shields.io/npm/v/dsh-image-tiler?label=npm)](https://www.npmjs.com/package/dsh-image-tiler)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![dsh](https://img.shields.io/badge/DeepSeek%20Harness-dsh--plugin-4176E6)](https://github.com/deepseek-ai/deepseek-harness)
@@ -32,8 +32,11 @@ Measured on a real boot (DSH 0.2.0-rc.2, desktop host, an 8000x8000 PNG of small
 | text rows the model can resolve | 0 | 8 |
 | contrast in the text band | 11.2 | 29.7 |
 
-Small images are not touched: anything the provider would transmit as-is is admitted exactly as
-before, so ordinary screenshots keep their current path.
+Small images are not touched, and neither are images the provider would only trim a little: the
+plugin cuts a picture up only when the print it replaces would have been about seventy percent of the
+source's own size or less. An ordinary 1920x1080 screenshot is printed at 1708x960 — eleven percent
+narrower, which no one can see — so it stays whole and leaves the message's image budget to pictures
+that need it.
 
 ## Compatibility
 
@@ -52,11 +55,11 @@ before, so ordinary screenshots keep their current path.
 ### From npm (recommended)
 
 ```
-dsh plugin --profile web add dsh-image-tiler@0.1.6
+dsh plugin --profile web add dsh-image-tiler@0.1.7
 ```
 
 Two different versions matter here, and mixing them up is the usual mistake. Pin the **plugin** version
-(`@0.1.6`): that is what keeps the install reproducible. Do **not** pin the harness: this package
+(`@0.1.7`): that is what keeps the install reproducible. Do **not** pin the harness: this package
 accepts any harness `0.2.x`, prereleases included, so a harness patch or rc bump does not disable it.
 A harness the plugin cannot work with is refused before pnpm runs —
 `dsh: installation rejected: Plugin <name>@<version> is incompatible with dsh <version>` — and
@@ -69,14 +72,15 @@ restart the app from the tray:
 
 ```json
 {
-  "dependencies": { "dsh-image-tiler": "0.1.6" },
+  "dependencies": { "dsh-image-tiler": "0.1.7" },
   "dsh": { "profile": { "bundles": ["...", "dsh-image-tiler"] } }
 }
 ```
 
 ### Verify the install
 
-Send any image larger than roughly 1500x1500 and watch the host log:
+Send an image the provider would have printed at about two thirds of its size — a 2560x1440
+screenshot, a 4K capture, an 8000x8000 page — and watch the host log:
 
 ```
 image-tiler: 8000x8000 shown as 20 tiles of up to 2000x1600 (20.4x detail, 54% covered)
@@ -87,7 +91,7 @@ The number of image attachments in the message is what changed: one upload becom
 ### Update / Uninstall
 
 ```
-dsh plugin --profile web add dsh-image-tiler@0.1.6
+dsh plugin --profile web add dsh-image-tiler@0.1.7
 dsh plugin --profile web remove dsh-image-tiler
 ```
 
@@ -144,8 +148,9 @@ reaches the tiler.
    session message itself. Replay, resume, and fork rebuild exactly what the model originally saw.
 4. The layout comes from `lib/geometry.js`, which transcribes the provider's own image projection
    (patch/downsample grid, 1024-token budget) and picks the grid whose regions land closest to 1:1
-   with what the provider would otherwise have sent. A source the provider already transmits
-   unchanged yields exactly one tile, which is why small images keep their old path.
+   with what the provider would otherwise have sent. A layout has to buy back at least twice the
+   detail per source pixel before it is worth the image parts it spends, so a source the provider
+   would print at nearly its own size yields exactly one tile.
 5. The whole batch is checked against the store's own limits before admission — piece count, each
    piece's stored size, and the total. If it does not fit, or if any tile would be a sliver, the
    original image is sent instead and the reason is logged. A plugin that tiled badly must never

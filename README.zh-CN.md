@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-[![version](https://img.shields.io/badge/version-0.1.6-4176E6)](https://github.com/Ssrs-Pro-Max/dsh-image-tiler)
+[![version](https://img.shields.io/badge/version-0.1.7-4176E6)](https://github.com/Ssrs-Pro-Max/dsh-image-tiler)
 [![npm](https://img.shields.io/npm/v/dsh-image-tiler?label=npm)](https://www.npmjs.com/package/dsh-image-tiler)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![dsh](https://img.shields.io/badge/DeepSeek%20Harness-dsh--plugin-4176E6)](https://github.com/deepseek-ai/deepseek-harness)
@@ -29,7 +29,9 @@
 | 能分辨的文字行 | 0 行 | 8 行 |
 | 文字带对比度 | 11.2 | 29.7 |
 
-小图不受影响：凡是 provider 本来就会原样传输的图片，准入过程与从前完全一致。
+小图不受影响，只被轻微缩小的图也不受影响：只有当 provider 会把这张图压到原尺寸的七成以下时，插件才会
+切。1920x1080 的普通截图在 provider 那里会被打成 1708x960 —— 窄了一成一，人眼根本看不出来 —— 所以
+它保持整张，把一条消息的图片配额留给真正需要的图。
 
 ## 兼容性
 
@@ -45,10 +47,10 @@
 ### 从 npm 安装（推荐）
 
 ```
-dsh plugin --profile web add dsh-image-tiler@0.1.6
+dsh plugin --profile web add dsh-image-tiler@0.1.7
 ```
 
-这里有两个版本号，混淆它们是常见错误。要固定的是**插件**版本（`@0.1.6`），它才决定安装可复现；
+这里有两个版本号，混淆它们是常见错误。要固定的是**插件**版本（`@0.1.7`），它才决定安装可复现；
 **不要**去固定宿主版本——本包接受任何 `0.2.x`（含预发布版），宿主的小版本或 rc 变化不会让插件失效。
 宿主实在不兼容时，安装器会在 pnpm 运行之前就拒绝：
 `dsh: installation rejected: Plugin <name>@<version> is incompatible with dsh <version>`；
@@ -60,14 +62,15 @@ dsh plugin --profile web add dsh-image-tiler@0.1.6
 
 ```json
 {
-  "dependencies": { "dsh-image-tiler": "0.1.6" },
+  "dependencies": { "dsh-image-tiler": "0.1.7" },
   "dsh": { "profile": { "bundles": ["...", "dsh-image-tiler"] } }
 }
 ```
 
 ### 验证安装
 
-发一张大于约 1500x1500 的图片，看宿主日志：
+发一张 provider 会打成原尺寸三分之二的图片 —— 2560x1440 的截图、4K 截图、8000x8000 的长页 ——
+然后看宿主日志：
 
 ```
 image-tiler: 8000x8000 shown as 20 tiles of up to 2000x1600 (20.4x detail, 54% covered)
@@ -78,7 +81,7 @@ image-tiler: 8000x8000 shown as 20 tiles of up to 2000x1600 (20.4x detail, 54% c
 ### 更新 / 卸载
 
 ```
-dsh plugin --profile web add dsh-image-tiler@0.1.6
+dsh plugin --profile web add dsh-image-tiler@0.1.7
 dsh plugin --profile web remove dsh-image-tiler
 ```
 
@@ -131,7 +134,8 @@ dsh plugin --profile web remove dsh-image-tiler
    看到的内容。
 4. 布局来自 `lib/geometry.js`，它转写了 provider 自己的图片投影（patch/downsample 网格、
    1024 token 预算），并在候选中挑出「各区域与 provider 本来会发送的图最接近 1:1」的那套网格。
-   provider 本来就会原样传输的源图只会得到一块，所以小图走的是原来的路径。
+   一套布局必须换回至少两倍于整张打印的像素密度，才值得占用那些图片 part，所以 provider 会按原尺寸
+   附近打印的源图只会得到一块。
 5. 整批切片在准入前会按存储自己的上限校验 —— 块数、每一块的存储字节数、以及总字节数。若不满足，
    或任何一块会变成细条，就改发原图并记录原因 —— 一个切坏了的插件绝不能把用户的图片弄丢，而存储
    会因为其中一个成员超标而拒绝整条消息。

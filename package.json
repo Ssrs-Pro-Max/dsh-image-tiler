@@ -1,6 +1,6 @@
 {
   "name": "dsh-image-tiler",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Shows oversized images to the model at a readably high resolution by tiling them before admission.",
   "type": "module",
   "main": "index.js",

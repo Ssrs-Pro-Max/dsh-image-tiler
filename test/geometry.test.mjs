@@ -202,6 +202,26 @@ for (const [width, height] of layoutCases) {
   check('a small image is transmitted as-is', plan.providerPrint.transmitted === true);
 }
 {
+  // A 1920x1080 screenshot used to arrive as four 960x540 fragments: the
+  // provider prints it at 1708x960, eleven percent narrower, and a layout that
+  // beat that print by two percent was accepted. The margin now sits where the
+  // eye does, so a screenshot this close to its own print stays whole and leaves
+  // the message's image budget to pictures that need it.
+  const plan = planTiles({ width: 1920, height: 1080, maxTiles: 20 });
+  check('1920x1080 stays whole instead of splitting for nothing', plan.tiles.length === 1, `tiles=${plan.tiles.length}`);
+  check('1920x1080 is still printed smaller than the source', plan.providerPrint.width < 1920, `${plan.providerPrint.width}x${plan.providerPrint.height}`);
+}
+{
+  const plan = planTiles({ width: 1080, height: 2400, maxTiles: 20 });
+  check('a phone screenshot stays whole', plan.tiles.length === 1, `tiles=${plan.tiles.length}`);
+  check('a phone screenshot is not transmitted as-is', plan.providerPrint.transmitted === false);
+}
+{
+  const plan = planTiles({ width: 2560, height: 1440, maxTiles: 20 });
+  check('2560x1440 still splits, its print is a third smaller', plan.tiles.length > 1, `tiles=${plan.tiles.length}`);
+  check('2560x1440 buys a visible amount of detail', plan.zoom >= 2, `zoom=${plan.zoom}`);
+}
+{
   const plan = planTiles({ width: 12000, height: 12000, maxTiles: 20 });
   check('a 144MP square still yields one message', plan.tiles.length <= 20, `tiles=${plan.tiles.length}`);
   check('a 144MP square shows more of itself than the print', plan.zoom > 1, `zoom=${plan.zoom}`);
